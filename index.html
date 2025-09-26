@@ -1,1 +1,16 @@
-<h1>Hello</h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SVG XSS Test</title>
+</head>
+<body>
+  <h1>SVG Profile Image XSS Test</h1>
+
+  <p>Here is the "profile.png" image:</p>
+
+  <img src="profile.png" alt="Profile Image" width="200" />
+
+  <p>If the browser executes the embedded JS, you will see an alert box.</p>
+</body>
+</html>
+
