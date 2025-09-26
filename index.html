@@ -1,16 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>SVG XSS Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valeria Sydor | Salesforce Developer & Cybersecurity Enthusiast</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;600&display=swap');
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #f3f3f3;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 3rem 2rem;
+      max-width: 650px;
+      width: 100%;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      font-weight: 300;
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      color: #b0c4de;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .links a {
+      display: inline-block;
+      margin: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      border-radius: 30px;
+      text-decoration: none;
+      color: #fff;
+      background: linear-gradient(135deg, #0072b1, #005582);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .links a:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+  </style>
 </head>
 <body>
-  <h1>SVG Profile Image XSS Test</h1>
-
-  <p>Here is the "profile.png" image:</p>
-
-  <img src="profile.png" alt="Profile Image" width="200" />
-
-  <p>If the browser executes the embedded JS, you will see an alert box.</p>
+  <div class="card">
+    <h1>👋 Hi, I'm Valeria Sydor</h1>
+    <h2>Salesforce Developer & Cybersecurity Enthusiast</h2>
+    <p>
+      I specialize in building scalable, user-focused Salesforce solutions while keeping a strong eye on security best practices. 
+      With a passion for problem-solving and innovation, I enjoy working at the intersection of <strong>development</strong> and <strong>cybersecurity</strong>.
+    </p>
+    <div class="links">
+      <a href="https://www.linkedin.com/in/valeriasydor" target="_blank">💼 LinkedIn</a>
+    </div>
+    <footer>© 2025 Valeria Sydor</footer>
+  </div>
 </body>
 </html>
 
